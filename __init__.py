@@ -92,6 +92,16 @@ def delete_zero_weight_vertex_groups(obj):
         obj.vertex_groups.remove(obj.vertex_groups[index])
     return removed_groups
 
+def add_parent_bones(armature, used_bone_names):
+    bpy.ops.object.mode_set(mode='EDIT')
+    existing_bone_names = set(used_bone_names)
+    for bone in armature.data.edit_bones:
+        if bone.name in existing_bone_names:
+            while bone:
+                used_bone_names.add(bone.name)
+                bone = bone.parent
+    bpy.ops.object.mode_set(mode='OBJECT')
+
 def delete_unused_bones(armature, used_bone_names):
     bpy.ops.object.mode_set(mode='EDIT')
     bones_to_delete = []
@@ -249,6 +259,12 @@ class OBJECT_OT_confirm_delete_unused_bones(bpy.types.Operator):
         default=True
     )
 
+    delete_empty_parent_bones: bpy.props.BoolProperty(
+        name="Delete Empty Parent Bones",
+        description="Delete parent bones that do not have a corresponding vertex group even if they have children that will not be deleted",
+        default=False
+    )
+
     @classmethod
     def poll(cls, context):
         message = validate_selection(context, min_objects=1,require_active_in_selection=True,max_objects=1)
@@ -284,6 +300,7 @@ class OBJECT_OT_confirm_delete_unused_bones(bpy.types.Operator):
             text=f"You are about to delete unused bones from '{context.active_object.parent.name}'"
         )
         layout.prop(self, "duplicate_armature")
+        layout.prop(self, "delete_empty_parent_bones")
 
     def execute(self, context):
         obj = context.active_object
@@ -318,6 +335,9 @@ class OBJECT_OT_confirm_delete_unused_bones(bpy.types.Operator):
         bpy.ops.object.select_all(action='DESELECT')
         armature.select_set(True)
         context.view_layer.objects.active = armature
+
+        if not self.delete_empty_parent_bones:
+            add_parent_bones(armature, used_bone_names)
 
         num_bones_deleted = delete_unused_bones(armature, used_bone_names)
 
