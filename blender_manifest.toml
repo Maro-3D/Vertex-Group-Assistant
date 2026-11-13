@@ -1,7 +1,7 @@
 schema_version = "1.0.0"
 
 id = "vertex_group_assistant"
-version = "1.0.2"
+version = "1.0.3"
 name = "Vertex Group Assistant"
 tagline = "Simplifies clothing rigging for avatars"
 maintainer = "Marek Hanzelka"

@@ -2,7 +2,7 @@ bl_info = {
     "name": "Vertex Group Assistant",
     "description": "Transfer vertex groups and armatures from active to selected.",
     "author": "Marek Hanzelka",
-    "version": (1, 0, 1),
+    "version": (1, 0, 3),
     "blender": (4, 0, 0),
     "location": "Object > Vertex Groups",
     "warning": "",
@@ -12,6 +12,7 @@ bl_info = {
 }
 
 import bpy
+import bpy.types
 
 # Utility Functions
 def validate_active_object(context, required_type='MESH', require_vertex_groups=False):
@@ -79,6 +80,9 @@ def get_used_vertex_groups(obj):
         for vg in vertex.groups:
             if vg.weight > 0:
                 weighted_groups.add(vg.group)
+                alt_name = bpy.utils.flip_name(obj.vertex_groups[vg.group].name)
+                if (alt_name in obj.vertex_groups):
+                    weighted_groups.add(obj.vertex_groups[alt_name].index)
     return weighted_groups
 
 def delete_zero_weight_vertex_groups(obj):
